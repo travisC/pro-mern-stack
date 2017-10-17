@@ -244,7 +244,7 @@ var IssueList = function (_React$Component3) {
           });
         }
       }).catch(function (err) {
-        alert("Error in sending data to the server " + err.message);
+        alert("Error in sending data to server: " + err.message);
       });
     }
   }, {
