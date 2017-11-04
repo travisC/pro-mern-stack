@@ -6,6 +6,10 @@ var _sourceMapSupport2 = _interopRequireDefault(_sourceMapSupport);
 
 require('babel-polyfill');
 
+var _path = require('path');
+
+var _path2 = _interopRequireDefault(_path);
+
 var _express = require('express');
 
 var _express2 = _interopRequireDefault(_express);
@@ -62,6 +66,10 @@ app.post('/api/issues', (req, res) => {
     console.log(error);
     res.status(500).json({ message: `Internal Server Error: ${error}` });
   });
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(_path2.default.resolve('static/index.html'));
 });
 
 _mongodb.MongoClient.connect('mongodb://localhost/issuetracker').then(connection => {
