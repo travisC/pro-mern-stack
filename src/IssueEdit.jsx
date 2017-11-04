@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 
-export default class IssueEdit extends React.Component {
+export default class IssueEdit extends React.Component { // eslint-disable-line
   //eslint-disable-line
   render() {
     return (
