@@ -20,6 +20,7 @@ app.get('/api/issues', (req, res) => {
   if (req.query.effort_lte || req.query.effort_gte) filter.effort = {};
   if (req.query.effort_lte) filter.effort.$lte = parseInt(req.query.effort_lte, 10);
   if (req.query.effort_gte) filter.effort.$gte = parseInt(req.query.effort_gte, 10);
+
   db.collection('issues').find(filter).toArray()
   .then(issues => {
     const metadata = { total_count: issues.length };
@@ -70,6 +71,7 @@ app.get('/api/issues/:id', (req, res) => {
   .next()
   .then(issue => {
     if (!issue) res.status(404).json({ message: `No such issue: ${issueId}` });
+    else res.json(issue);
   })
   .catch(error => {
     console.log(error);
