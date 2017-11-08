@@ -12,11 +12,13 @@ export default class IssueAdd extends React.Component {
     this.props.createIssue({
       owner: form.owner.value,
       title: form.title.value,
+      effort: form.effort.value,
       status: 'New',
       created: new Date(),
     });
     // clear the form for the next input
     form.owner.value = ''; form.title.value = '';
+    form.effort.value = '';
   }
 
   render() {
@@ -24,6 +26,7 @@ export default class IssueAdd extends React.Component {
       <div>
         <form name="issueAdd" onSubmit={this.handleSubmit}>
           <input type="text" name="owner" placeholder="Owner" />
+          <input type="text" name="effort" placeholder="Effort" />
           <input type="text" name="title" placeholder="Title" />
           <button>Add</button>
         </form>
