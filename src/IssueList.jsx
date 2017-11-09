@@ -21,7 +21,9 @@ const IssueRow = (props) => {
       <td>{props.issue.effort}</td>
       <td>{props.issue.completionDate ? props.issue.completionDate.toDateString() : ''}</td>
       <td>{props.issue.title}</td>
-      <td><Button bsSize="xsmall" onClick={onDeleteClick}><Glyphicon glyph="trash" /></Button></td>
+      <td>
+        <Button bsSize="xsmall" onClick={onDeleteClick}><Glyphicon glyph="trash" /></Button>
+      </td>
     </tr>
   );
 };
@@ -66,9 +68,12 @@ export default class IssueList extends React.Component {
       issues: [],
       toastVisible: false, toastMessage: '', toastType: 'success',
     };
+
     this.createIssue = this.createIssue.bind(this);
     this.setFilter = this.setFilter.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
+    this.showError = this.showError.bind(this);
+    this.dismissToast = this.dismissToast.bind(this);
   }
 
   componentDidMount() {
@@ -161,10 +166,8 @@ export default class IssueList extends React.Component {
         <IssueTable issues={this.state.issues} deleteIssue={this.deleteIssue} />
         <IssueAdd createIssue={this.createIssue} />
         <Toast
-          showing={this.state.toastVisible}
-          message={this.state.toastMessage}
-          onDismiss={this.dismissToast}
-          bsStyle={this.state.toastType}
+          showing={this.state.toastVisible} message={this.state.toastMessage}
+          onDismiss={this.dismissToast} bsStyle={this.state.toastType}
         />
       </div>
     );
