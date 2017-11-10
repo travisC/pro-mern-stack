@@ -1,12 +1,8 @@
-import SourceMapSupport from 'source-map-support';
-SourceMapSupport.install();
-import 'babel-polyfill';
-
-import path from 'path';
 import express from 'express';
 import bodyParser from 'body-parser';
-import { MongoClient, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import Issue from './issue.js';
+import renderedPageRouter from './renderedPageRouter.jsx';
 
 const app = express();
 app.use(express.static('static'));
@@ -129,15 +125,10 @@ app.delete('/api/issues/:id', (req, res) => {
   });
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve('static/index.html'));
-});
+app.use('/', renderedPageRouter);
 
-MongoClient.connect('mongodb://localhost/issuetracker').then(connection => {
-  db = connection;
-  app.listen(3000, () => {
-    console.log('App started on port 3000');
-  });
-}).catch(error => {
-  console.log('ERROR:', error);
-});
+function setDb(newDb) {
+  db = newDb;
+}
+
+export { app, setDb };

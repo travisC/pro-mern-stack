@@ -1,14 +1,9 @@
 'use strict';
 
-var _sourceMapSupport = require('source-map-support');
-
-var _sourceMapSupport2 = _interopRequireDefault(_sourceMapSupport);
-
-require('babel-polyfill');
-
-var _path = require('path');
-
-var _path2 = _interopRequireDefault(_path);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.setDb = exports.app = undefined;
 
 var _express = require('express');
 
@@ -24,10 +19,11 @@ var _issue = require('./issue.js');
 
 var _issue2 = _interopRequireDefault(_issue);
 
+var _renderedPageRouter = require('./renderedPageRouter.jsx');
+
+var _renderedPageRouter2 = _interopRequireDefault(_renderedPageRouter);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-_sourceMapSupport2.default.install();
-
 
 const app = (0, _express2.default)();
 app.use(_express2.default.static('static'));
@@ -132,16 +128,12 @@ app.delete('/api/issues/:id', (req, res) => {
   });
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(_path2.default.resolve('static/index.html'));
-});
+app.use('/', _renderedPageRouter2.default);
 
-_mongodb.MongoClient.connect('mongodb://localhost/issuetracker').then(connection => {
-  db = connection;
-  app.listen(3000, () => {
-    console.log('App started on port 3000');
-  });
-}).catch(error => {
-  console.log('ERROR:', error);
-});
+function setDb(newDb) {
+  db = newDb;
+}
+
+exports.app = app;
+exports.setDb = setDb;
 //# sourceMappingURL=server.js.map

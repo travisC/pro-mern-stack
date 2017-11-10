@@ -1,19 +1,36 @@
 import React from 'react';
 import { FormGroup, FormControl, ControlLabel, ButtonToolbar, Button,
-   Panel, Form, Col, Alert } from 'react-bootstrap';
+  Panel, Form, Col, Alert } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import NumInput from './NumInput.jsx';
+
 import DateInput from './DateInput.jsx';
 import Toast from './Toast.jsx';
 
 export default class IssueEdit extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      issue: {
+  static dataFetcher({ params, urlBase }) {
+    return fetch(`${urlBase || ''}/api/issues/${params.id}`).then(response => {
+      if (!response.ok) return response.json().then(error => Promise.reject(error));
+      return response.json().then(data => ({ IssueEdit: data }));
+    });
+  }
+
+  constructor(props, context) {
+    super(props, context);
+    let issue;
+    if (context.initialState.IssueEdit) {
+      issue = context.initialState.IssueEdit;
+      issue.created = new Date(issue.created);
+      issue.completionDate = issue.completionDate != null ?
+        new Date(issue.completionDate) : null;
+    } else {
+      issue = {
         _id: '', title: '', status: '', owner: '', effort: null,
         completionDate: null, created: null,
-      },
+      };
+    }
+    this.state = {
+      issue,
       invalidFields: {}, showingValidation: false,
       toastVisible: false, toastMessage: '', toastType: 'success',
     };
@@ -57,6 +74,7 @@ export default class IssueEdit extends React.Component {
   onSubmit(event) {
     event.preventDefault();
     this.showValidation();
+
     if (Object.keys(this.state.invalidFields).length !== 0) {
       return;
     }
@@ -85,31 +103,25 @@ export default class IssueEdit extends React.Component {
     });
   }
 
+  loadData() {
+    IssueEdit.dataFetcher({ params: this.props.params })
+    .then(data => {
+      const issue = data.IssueEdit;
+      issue.created = new Date(issue.created);
+      issue.completionDate = issue.completionDate != null ?
+        new Date(issue.completionDate) : null;
+      this.setState({ issue });
+    }).catch(err => {
+      this.showError(`Error in fetching data from server: ${err.message}`);
+    });
+  }
+
   showValidation() {
     this.setState({ showingValidation: true });
   }
 
   dismissValidation() {
     this.setState({ showingValidation: false });
-  }
-
-  loadData() {
-    fetch(`/api/issues/${this.props.params.id}`).then(response => {
-      if (response.ok) {
-        response.json().then(issue => {
-          issue.created = new Date(issue.created);
-          issue.completionDate = issue.completionDate != null ?
-            new Date(issue.completionDate) : null;
-          this.setState({ issue });
-        });
-      } else {
-        response.json().then(error => {
-          this.showError(`Failed to fetch issue: ${error.message}`);
-        });
-      }
-    }).catch(err => {
-      this.showError(`Error in fetching data from server: ${err.message}`);
-    });
   }
 
   showSuccess(message) {
@@ -155,7 +167,7 @@ export default class IssueEdit extends React.Component {
             <Col componentClass={ControlLabel} sm={3}>Status</Col>
             <Col sm={9}>
               <FormControl
-                componentClass="select" name="status" value="{issue.status}"
+                componentClass="select" name="status" value={issue.status}
                 onChange={this.onChange}
               >
                 <option value="New">New</option>
@@ -214,10 +226,8 @@ export default class IssueEdit extends React.Component {
           </FormGroup>
         </Form>
         <Toast
-          showing={this.state.toastVisible}
-          message={this.state.toastMessage}
-          onDismiss={this.dismissToast}
-          bsStyle={this.state.toastType}
+          showing={this.state.toastVisible} message={this.state.toastMessage}
+          onDismiss={this.dismissToast} bsStyle={this.state.toastType}
         />
       </Panel>
     );
@@ -226,4 +236,8 @@ export default class IssueEdit extends React.Component {
 
 IssueEdit.propTypes = {
   params: React.PropTypes.object.isRequired,
+};
+
+IssueEdit.contextTypes = {
+  initialState: React.PropTypes.object,
 };
