@@ -27,7 +27,7 @@
 /******/ 	}
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "b14772431833caa553ba"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "ee93d323af47087a5051"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -666,11 +666,18 @@
 	  if (req.query.effort_gte) filter.effort.$gte = parseInt(req.query.effort_gte, 10);
 	
 	  if (req.query._summary === undefined) {
+	    const offset = req.query._offset ? parseInt(req.query._offset, 10) : 0;
 	    let limit = req.query._limit ? parseInt(req.query._limit, 10) : 20;
 	    if (limit > 50) limit = 50;
-	    db.collection('issues').find(filter).limit(limit).toArray().then(issues => {
-	      const metadata = { total_count: issues.length };
-	      res.json({ _metadata: metadata, records: issues });
+	
+	    const cursor = db.collection('issues').find(filter).sort({ _id: 1 }).skip(offset).limit(limit);
+	
+	    let totalCount;
+	    cursor.count(false).then(result => {
+	      totalCount = result;
+	      return cursor.toArray();
+	    }).then(issues => {
+	      res.json({ metadata: { totalCount: totalCount }, records: issues });
 	    }).catch(error => {
 	      console.log(error);
 	      res.status(500).json({ message: `Internal Server Error: ${error}` });
@@ -1050,9 +1057,13 @@
 	
 	var _IssueAddNavItem2 = _interopRequireDefault(_IssueAddNavItem);
 	
+	var _withToast = __webpack_require__(31);
+	
+	var _withToast2 = _interopRequireDefault(_withToast);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	const Header = () => _react2.default.createElement(
+	const Header = props => _react2.default.createElement(
 	  _reactBootstrap.Navbar,
 	  { fluid: true },
 	  _react2.default.createElement(
@@ -1089,7 +1100,7 @@
 	  _react2.default.createElement(
 	    _reactBootstrap.Nav,
 	    { pullRight: true },
-	    _react2.default.createElement(_IssueAddNavItem2.default, null),
+	    _react2.default.createElement(_IssueAddNavItem2.default, { showError: props.showError }),
 	    _react2.default.createElement(
 	      _reactBootstrap.NavDropdown,
 	      { id: 'user-dropdown', title: _react2.default.createElement(_reactBootstrap.Glyphicon, { glyph: 'option-horizontal' }), noCaret: true },
@@ -1102,10 +1113,16 @@
 	  )
 	);
 	
+	Header.propTypes = {
+	  showError: _react2.default.PropTypes.func.isRequired
+	};
+	
+	const HeaderWithToast = (0, _withToast2.default)(Header);
+	
 	const App = props => _react2.default.createElement(
 	  'div',
 	  null,
-	  _react2.default.createElement(Header, null),
+	  _react2.default.createElement(HeaderWithToast, null),
 	  _react2.default.createElement(
 	    'div',
 	    { className: 'container-fluid' },
@@ -1165,25 +1182,17 @@
 	
 	var _reactBootstrap = __webpack_require__(17);
 	
-	var _Toast = __webpack_require__(20);
-	
-	var _Toast2 = _interopRequireDefault(_Toast);
-	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	class IssueAddNavItem extends _react2.default.Component {
 	  constructor(props) {
 	    super(props);
 	    this.state = {
-	      showing: false,
-	      toastVisible: false, toastMessage: '', toastType: 'success'
+	      showing: false
 	    };
-	
 	    this.showModal = this.showModal.bind(this);
 	    this.hideModal = this.hideModal.bind(this);
 	    this.submit = this.submit.bind(this);
-	    this.showError = this.showError.bind(this);
-	    this.dismissToast = this.dismissToast.bind(this);
 	  }
 	
 	  showModal() {
@@ -1192,14 +1201,6 @@
 	
 	  hideModal() {
 	    this.setState({ showing: false });
-	  }
-	
-	  showError(message) {
-	    this.setState({ toastVisible: true, toastMessage: message, toastType: 'danger' });
-	  }
-	
-	  dismissToast() {
-	    this.setState({ toastVisible: false });
 	  }
 	
 	  submit(e) {
@@ -1221,11 +1222,11 @@
 	        });
 	      } else {
 	        response.json().then(error => {
-	          this.showError(`failed to add issue: ${error.message}`);
+	          this.props.showError(`Failed to add issue: ${error.message}`);
 	        });
 	      }
 	    }).catch(err => {
-	      this.showError(`Error in sending data to server: ${err.message}`);
+	      this.props.showError(`Error in sending data to server: ${err.message}`);
 	    });
 	  }
 	
@@ -1234,13 +1235,13 @@
 	      _reactBootstrap.NavItem,
 	      { onClick: this.showModal },
 	      _react2.default.createElement(_reactBootstrap.Glyphicon, { glyph: 'plus' }),
-	      ' Create IssueList',
+	      ' Create Issue',
 	      _react2.default.createElement(
 	        _reactBootstrap.Modal,
 	        { keyboard: true, show: this.state.showing, onHide: this.hideModal },
 	        _react2.default.createElement(
 	          _reactBootstrap.Modal.Header,
-	          null,
+	          { closeButton: true },
 	          _react2.default.createElement(
 	            _reactBootstrap.Modal.Title,
 	            null,
@@ -1283,11 +1284,7 @@
 	            null,
 	            _react2.default.createElement(
 	              _reactBootstrap.Button,
-	              {
-	                type: 'button',
-	                bsStyle: 'primary',
-	                onClick: this.submit
-	              },
+	              { type: 'button', bsStyle: 'primary', onClick: this.submit },
 	              'Submit'
 	            ),
 	            _react2.default.createElement(
@@ -1297,19 +1294,14 @@
 	            )
 	          )
 	        )
-	      ),
-	      _react2.default.createElement(_Toast2.default, {
-	        showing: this.state.toastVisible,
-	        message: this.state.toastMessage,
-	        onDismiss: this.dismissToast,
-	        bsStyle: this.state.toastType
-	      })
+	      )
 	    );
 	  }
 	}
 	
 	IssueAddNavItem.propTypes = {
-	  router: _react2.default.PropTypes.object
+	  router: _react2.default.PropTypes.object,
+	  showError: _react2.default.PropTypes.func.isRequired
 	};
 	
 	exports.default = (0, _reactRouter.withRouter)(IssueAddNavItem);
@@ -1399,9 +1391,9 @@
 	
 	var _IssueFilter2 = _interopRequireDefault(_IssueFilter);
 	
-	var _Toast = __webpack_require__(20);
+	var _withToast = __webpack_require__(31);
 	
-	var _Toast2 = _interopRequireDefault(_Toast);
+	var _withToast2 = _interopRequireDefault(_withToast);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -1531,12 +1523,22 @@
 	  deleteIssue: _react2.default.PropTypes.func.isRequired
 	};
 	
+	const PAGE_SIZE = 10;
+	
 	class IssueList extends _react2.default.Component {
 	  static dataFetcher(_ref) {
 	    let urlBase = _ref.urlBase,
 	        location = _ref.location;
 	
-	    return fetch(`${urlBase || ''}/api/issues${location.search}`).then(response => {
+	    const query = Object.assign({}, location.query);
+	    const pageStr = query._page;
+	    if (pageStr) {
+	      delete query._page;
+	      query._offset = (parseInt(pageStr, 10) - 1) * PAGE_SIZE;
+	    }
+	    query._limit = PAGE_SIZE;
+	    const search = Object.keys(query).map(k => `${k}=${query[k]}`).join('&');
+	    return fetch(`${urlBase || ''}/api/issues?${search}`).then(response => {
 	      if (!response.ok) return response.json().then(error => Promise.reject(error));
 	      return response.json().then(data => ({ IssueList: data }));
 	    });
@@ -1544,7 +1546,8 @@
 	
 	  constructor(props, context) {
 	    super(props, context);
-	    const issues = context.initialState.IssueList ? context.initialState.IssueList.records : [];
+	    const data = context.initialState.IssueList ? context.initialState.IssueList : { metadata: { totalCount: 0 }, records: [] };
+	    const issues = data.records;
 	    issues.forEach(issue => {
 	      issue.created = new Date(issue.created);
 	      if (issue.completionDate) {
@@ -1553,13 +1556,12 @@
 	    });
 	    this.state = {
 	      issues: issues,
-	      toastVisible: false, toastMessage: '', toastType: 'success'
+	      totalCount: data.metadata.totalCount
 	    };
 	
 	    this.setFilter = this.setFilter.bind(this);
+	    this.selectPage = this.selectPage.bind(this);
 	    this.deleteIssue = this.deleteIssue.bind(this);
-	    this.showError = this.showError.bind(this);
-	    this.dismissToast = this.dismissToast.bind(this);
 	  }
 	
 	  componentDidMount() {
@@ -1569,7 +1571,7 @@
 	  componentDidUpdate(prevProps) {
 	    const oldQuery = prevProps.location.query;
 	    const newQuery = this.props.location.query;
-	    if (oldQuery.status === newQuery.status && oldQuery.effort_gte === newQuery.effort_gte && oldQuery.effort_lte === newQuery.effort_lte) {
+	    if (oldQuery.status === newQuery.status && oldQuery.effort_gte === newQuery.effort_gte && oldQuery.effort_lte === newQuery.effort_lte && oldQuery._page === newQuery._page) {
 	      return;
 	    }
 	    this.loadData();
@@ -1579,12 +1581,9 @@
 	    this.props.router.push({ pathname: this.props.location.pathname, query: query });
 	  }
 	
-	  showError(message) {
-	    this.setState({ toastVisible: true, toastMessage: message, toastType: 'danger' });
-	  }
-	
-	  dismissToast() {
-	    this.setState({ toastVisible: false });
+	  selectPage(eventKey) {
+	    const query = Object.assign(this.props.location.query, { _page: eventKey });
+	    this.props.router.push({ pathname: this.props.location.pathname, query: query });
 	  }
 	
 	  loadData() {
@@ -1596,15 +1595,15 @@
 	          issue.completionDate = new Date(issue.completionDate);
 	        }
 	      });
-	      this.setState({ issues: issues });
+	      this.setState({ issues: issues, totalCount: data.IssueList.metadata.totalCount });
 	    }).catch(err => {
-	      this.showError(`Error in fetching data from server: ${err}`);
+	      this.props.showError(`Error in fetching data from server: ${err}`);
 	    });
 	  }
 	
 	  deleteIssue(id) {
 	    fetch(`/api/issues/${id}`, { method: 'DELETE' }).then(response => {
-	      if (!response.ok) this.showError('Failed to delete issue');else this.loadData();
+	      if (!response.ok) this.props.showError('Failed to delete issue');else this.loadData();
 	    });
 	  }
 	
@@ -1617,24 +1616,30 @@
 	        { collapsible: true, header: 'Filter' },
 	        _react2.default.createElement(_IssueFilter2.default, { setFilter: this.setFilter, initFilter: this.props.location.query })
 	      ),
-	      _react2.default.createElement(IssueTable, { issues: this.state.issues, deleteIssue: this.deleteIssue }),
-	      _react2.default.createElement(_Toast2.default, {
-	        showing: this.state.toastVisible, message: this.state.toastMessage,
-	        onDismiss: this.dismissToast, bsStyle: this.state.toastType
-	      })
+	      _react2.default.createElement(_reactBootstrap.Pagination, {
+	        items: Math.ceil(this.state.totalCount / PAGE_SIZE),
+	        activePage: parseInt(this.props.location.query._page || '1', 10),
+	        onSelect: this.selectPage, maxButtons: 7, next: true, prev: true, boundaryLinks: true
+	      }),
+	      _react2.default.createElement(IssueTable, { issues: this.state.issues, deleteIssue: this.deleteIssue })
 	    );
 	  }
 	}
 	
-	exports.default = IssueList;
 	IssueList.propTypes = {
 	  location: _react2.default.PropTypes.object.isRequired,
-	  router: _react2.default.PropTypes.object
+	  router: _react2.default.PropTypes.object,
+	  showError: _react2.default.PropTypes.func.isRequired
 	};
 	
 	IssueList.contextTypes = {
 	  initialState: _react2.default.PropTypes.object
 	};
+	
+	const IssueListWithToast = (0, _withToast2.default)(IssueList);
+	IssueListWithToast.dataFetcher = IssueList.dataFetcher;
+	
+	exports.default = IssueListWithToast;
 
 /***/ }),
 /* 22 */
@@ -1876,9 +1881,9 @@
 	
 	var _DateInput2 = _interopRequireDefault(_DateInput);
 	
-	var _Toast = __webpack_require__(20);
+	var _withToast = __webpack_require__(31);
 	
-	var _Toast2 = _interopRequireDefault(_Toast);
+	var _withToast2 = _interopRequireDefault(_withToast);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -1908,14 +1913,10 @@
 	    }
 	    this.state = {
 	      issue: issue,
-	      invalidFields: {}, showingValidation: false,
-	      toastVisible: false, toastMessage: '', toastType: 'success'
+	      invalidFields: {}, showingValidation: false
 	    };
 	    this.dismissValidation = this.dismissValidation.bind(this);
 	    this.showValidation = this.showValidation.bind(this);
-	    this.showSuccess = this.showSuccess.bind(this);
-	    this.showError = this.showError.bind(this);
-	    this.dismissToast = this.dismissToast.bind(this);
 	    this.onChange = this.onChange.bind(this);
 	    this.onValidityChange = this.onValidityChange.bind(this);
 	    this.onSubmit = this.onSubmit.bind(this);
@@ -1968,15 +1969,15 @@
 	            updatedIssue.completionDate = new Date(updatedIssue.completionDate);
 	          }
 	          this.setState({ issue: updatedIssue });
-	          this.showSuccess('Updated issue successfully.');
+	          this.props.showSuccess('Updated issue successfully.');
 	        });
 	      } else {
 	        response.json().then(error => {
-	          this.showError(`Failed to update issue: ${error.message}`);
+	          this.props.showError(`Failed to update issue: ${error.message}`);
 	        });
 	      }
 	    }).catch(err => {
-	      this.showError(`Error in sending data to server: ${err.message}`);
+	      this.props.showError(`Error in sending data to server: ${err.message}`);
 	    });
 	  }
 	
@@ -1987,7 +1988,7 @@
 	      issue.completionDate = issue.completionDate != null ? new Date(issue.completionDate) : null;
 	      this.setState({ issue: issue });
 	    }).catch(err => {
-	      this.showError(`Error in fetching data from server: ${err.message}`);
+	      this.props.showError(`Error in fetching data from server: ${err.message}`);
 	    });
 	  }
 	
@@ -1997,18 +1998,6 @@
 	
 	  dismissValidation() {
 	    this.setState({ showingValidation: false });
-	  }
-	
-	  showSuccess(message) {
-	    this.setState({ toastVisible: true, toastMessage: message, toastType: 'success' });
-	  }
-	
-	  showError(message) {
-	    this.setState({ toastVisible: true, toastMessage: message, toastType: 'danger' });
-	  }
-	
-	  dismissToast() {
-	    this.setState({ toastVisible: false });
 	  }
 	
 	  render() {
@@ -2212,23 +2201,25 @@
 	            validationMessage
 	          )
 	        )
-	      ),
-	      _react2.default.createElement(_Toast2.default, {
-	        showing: this.state.toastVisible, message: this.state.toastMessage,
-	        onDismiss: this.dismissToast, bsStyle: this.state.toastType
-	      })
+	      )
 	    );
 	  }
 	}
 	
-	exports.default = IssueEdit;
 	IssueEdit.propTypes = {
-	  params: _react2.default.PropTypes.object.isRequired
+	  params: _react2.default.PropTypes.object.isRequired,
+	  showSuccess: _react2.default.PropTypes.func.isRequired,
+	  showError: _react2.default.PropTypes.func.isRequired
 	};
 	
 	IssueEdit.contextTypes = {
 	  initialState: _react2.default.PropTypes.object
 	};
+	
+	const IssueEditWithToast = (0, _withToast2.default)(IssueEdit);
+	IssueEditWithToast.dataFetcher = IssueEdit.dataFetcher;
+	
+	exports.default = IssueEditWithToast;
 
 /***/ }),
 /* 25 */
@@ -2400,9 +2391,9 @@
 	
 	var _IssueFilter2 = _interopRequireDefault(_IssueFilter);
 	
-	var _Toast = __webpack_require__(20);
+	var _withToast = __webpack_require__(31);
 	
-	var _Toast2 = _interopRequireDefault(_Toast);
+	var _withToast2 = _interopRequireDefault(_withToast);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -2444,12 +2435,9 @@
 	    super(props, context);
 	    const stats = context.initialState.IssueReport ? context.initialState.IssueReport : {};
 	    this.state = {
-	      stats: stats,
-	      toastVisible: false, toastMessage: '', toastType: 'success'
+	      stats: stats
 	    };
 	    this.setFilter = this.setFilter.bind(this);
-	    this.showError = this.showError.bind(this);
-	    this.dismissToast = this.dismissToast.bind(this);
 	  }
 	
 	  componentDidMount() {
@@ -2469,19 +2457,11 @@
 	    this.props.router.push({ pathname: this.props.location.pathname, query: query });
 	  }
 	
-	  showError(message) {
-	    this.setState({ toastVisible: true, toastMessage: message, toastType: 'danger' });
-	  }
-	
-	  dismissToast() {
-	    this.setState({ toastVisible: false });
-	  }
-	
 	  loadData() {
 	    IssueReport.dataFetcher({ location: this.props.location }).then(data => {
 	      this.setState({ stats: data.IssueReport });
 	    }).catch(err => {
-	      this.showError(`Error in fetching data from server: ${err}`);
+	      this.props.showError(`Error in fetching data from server: ${err}`);
 	    });
 	  }
 	
@@ -2516,24 +2496,25 @@
 	          null,
 	          Object.keys(this.state.stats).map((owner, index) => _react2.default.createElement(StatRow, { key: index, owner: owner, counts: this.state.stats[owner] }))
 	        )
-	      ),
-	      _react2.default.createElement(_Toast2.default, {
-	        showing: this.state.toastVisible, message: this.state.toastMessage,
-	        onDismiss: this.dismissToast, bsStyle: this.state.toastType
-	      })
+	      )
 	    );
 	  }
 	}
 	
-	exports.default = IssueReport;
 	IssueReport.propTypes = {
 	  location: _react2.default.PropTypes.object.isRequired,
-	  router: _react2.default.PropTypes.object
+	  router: _react2.default.PropTypes.object,
+	  showError: _react2.default.PropTypes.func.isRequired
 	};
 	
 	IssueReport.contextTypes = {
 	  initialState: _react2.default.PropTypes.object
 	};
+	
+	const IssueReportWithToast = (0, _withToast2.default)(IssueReport);
+	IssueReportWithToast.dataFetcher = IssueReport.dataFetcher;
+	
+	exports.default = IssueReportWithToast;
 
 /***/ }),
 /* 28 */
@@ -2645,6 +2626,69 @@
 		}
 	};
 
+
+/***/ }),
+/* 31 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
+	exports.default = withToast;
+	
+	var _react = __webpack_require__(11);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _Toast = __webpack_require__(20);
+	
+	var _Toast2 = _interopRequireDefault(_Toast);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function withToast(OriginalComponent) {
+	  return class WithToast extends _react2.default.Component {
+	    constructor(props) {
+	      super(props);
+	      this.state = {
+	        toastVisible: false, toastMessage: '', toastType: 'success'
+	      };
+	      this.showSuccess = this.showSuccess.bind(this);
+	      this.showError = this.showError.bind(this);
+	      this.dismissToast = this.dismissToast.bind(this);
+	    }
+	
+	    showSuccess(message) {
+	      this.setState({ toastVisible: true, toastMessage: message, toastType: 'success' });
+	    }
+	
+	    showError(message) {
+	      this.setState({ toastVisible: true, toastMessage: message, toastType: 'danger' });
+	    }
+	
+	    dismissToast() {
+	      this.setState({ toastVisible: false });
+	    }
+	
+	    render() {
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(OriginalComponent, _extends({
+	          showError: this.showError, showSuccess: this.showSuccess }, this.props)),
+	        _react2.default.createElement(_Toast2.default, {
+	          showing: this.state.toastVisible, message: this.state.toastMessage,
+	          onDismiss: this.dismissToast, bsStyle: this.state.toastType
+	        })
+	      );
+	    }
+	  };
+	}
 
 /***/ })
 /******/ ])));
