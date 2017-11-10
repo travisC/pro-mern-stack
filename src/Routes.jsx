@@ -13,7 +13,7 @@ export default (
     <IndexRedirect to="/issues" />
     <Route path="issues" component={withRouter(IssueList)} />
     <Route path="issues/:id" component={IssueEdit} />
-    <Route path="reports" component={IssueReport} />
+    <Route path="reports" component={withRouter(IssueReport)} />
     <Route path="*" component={NoMatch} />
   </Route>
 );

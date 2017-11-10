@@ -9,7 +9,7 @@ const statuses = ['New', 'Open', 'Assigned', 'Fixed', 'Verified', 'Closed'];
 const StatRow = (props) => (
   <tr>
     <td>{props.owner}</td>
-    {status.map((status, index) => (<td key={index}>{props.counts[status]}</td>))}
+    {statuses.map((status, index) => (<td key={index}>{props.counts[status]}</td>))}
   </tr>
 );
 
@@ -21,7 +21,6 @@ StatRow.propTypes = {
 export default class IssueReport extends React.Component {
   static dataFetcher({ urlBase, location }) {
     const search = location.search ? `${location.search}&_summary` : '?_summary';
-
     return fetch(`${urlBase || ''}/api/issues${search}`).then(response => {
       if (!response.ok) return response.json().then(error => Promise.reject(error));
       return response.json().then(data => ({ IssueReport: data }));
@@ -48,8 +47,8 @@ export default class IssueReport extends React.Component {
     const oldQuery = prevProps.location.query;
     const newQuery = this.props.location.query;
     if (oldQuery.status === newQuery.status
-      && oldQuery.effort_gte === newQuery.effort_gte
-      && oldQuery.effort_lte === newQuery.effort_lte) {
+        && oldQuery.effort_gte === newQuery.effort_gte
+        && oldQuery.effort_lte === newQuery.effort_lte) {
       return;
     }
     this.loadData();
@@ -64,11 +63,11 @@ export default class IssueReport extends React.Component {
   }
 
   dismissToast() {
-    this.seteState({ toastVisible: false });
+    this.setState({ toastVisible: false });
   }
 
   loadData() {
-    IssueReport.dataFetcher()
+    IssueReport.dataFetcher({ location: this.props.location })
     .then(data => {
       this.setState({ stats: data.IssueReport });
     }).catch(err => {
@@ -80,10 +79,7 @@ export default class IssueReport extends React.Component {
     return (
       <div>
         <Panel collapsible header="Filter">
-          <IssueFilter
-            setFilter={this.setFilter}
-            initFilter={this.props.location.query}
-          />
+          <IssueFilter setFilter={this.setFilter} initFilter={this.props.location.query} />
         </Panel>
         <Table bordered condensed hover responsive>
           <thead>
@@ -94,7 +90,7 @@ export default class IssueReport extends React.Component {
           </thead>
           <tbody>
             {Object.keys(this.state.stats).map((owner, index) =>
-              <StatRow key={index} owner={owner} count={this.state.stats[owner]} />
+              <StatRow key={index} owner={owner} counts={this.state.stats[owner]} />
             )}
           </tbody>
         </Table>

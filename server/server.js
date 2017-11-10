@@ -20,7 +20,8 @@ app.get('/api/issues', (req, res) => {
   if (req.query._summary === undefined) {
     let limit = req.query._limit ? parseInt(req.query._limit, 10) : 20;
     if (limit > 50) limit = 50;
-    db.collection('issues').find(filter).toArray()
+    db.collection('issues').find(filter).limit(limit)
+    .toArray()
     .then(issues => {
       const metadata = { total_count: issues.length };
       res.json({ _metadata: metadata, records: issues });

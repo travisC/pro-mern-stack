@@ -27,7 +27,7 @@
 /******/ 	}
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "1db7173ac34c4ce484d0"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "b14772431833caa553ba"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -668,7 +668,7 @@
 	  if (req.query._summary === undefined) {
 	    let limit = req.query._limit ? parseInt(req.query._limit, 10) : 20;
 	    if (limit > 50) limit = 50;
-	    db.collection('issues').find(filter).toArray().then(issues => {
+	    db.collection('issues').find(filter).limit(limit).toArray().then(issues => {
 	      const metadata = { total_count: issues.length };
 	      res.json({ _metadata: metadata, records: issues });
 	    }).catch(error => {
@@ -1022,7 +1022,7 @@
 	  _react2.default.createElement(_reactRouter.IndexRedirect, { to: '/issues' }),
 	  _react2.default.createElement(_reactRouter.Route, { path: 'issues', component: (0, _reactRouter.withRouter)(_IssueList2.default) }),
 	  _react2.default.createElement(_reactRouter.Route, { path: 'issues/:id', component: _IssueEdit2.default }),
-	  _react2.default.createElement(_reactRouter.Route, { path: 'reports', component: _IssueReport2.default }),
+	  _react2.default.createElement(_reactRouter.Route, { path: 'reports', component: (0, _reactRouter.withRouter)(_IssueReport2.default) }),
 	  _react2.default.createElement(_reactRouter.Route, { path: '*', component: NoMatch })
 	);
 
@@ -2416,7 +2416,7 @@
 	    null,
 	    props.owner
 	  ),
-	  status.map((status, index) => _react2.default.createElement(
+	  statuses.map((status, index) => _react2.default.createElement(
 	    'td',
 	    { key: index },
 	    props.counts[status]
@@ -2434,7 +2434,6 @@
 	        location = _ref.location;
 	
 	    const search = location.search ? `${location.search}&_summary` : '?_summary';
-	
 	    return fetch(`${urlBase || ''}/api/issues${search}`).then(response => {
 	      if (!response.ok) return response.json().then(error => Promise.reject(error));
 	      return response.json().then(data => ({ IssueReport: data }));
@@ -2475,11 +2474,11 @@
 	  }
 	
 	  dismissToast() {
-	    this.seteState({ toastVisible: false });
+	    this.setState({ toastVisible: false });
 	  }
 	
 	  loadData() {
-	    IssueReport.dataFetcher().then(data => {
+	    IssueReport.dataFetcher({ location: this.props.location }).then(data => {
 	      this.setState({ stats: data.IssueReport });
 	    }).catch(err => {
 	      this.showError(`Error in fetching data from server: ${err}`);
@@ -2493,10 +2492,7 @@
 	      _react2.default.createElement(
 	        _reactBootstrap.Panel,
 	        { collapsible: true, header: 'Filter' },
-	        _react2.default.createElement(_IssueFilter2.default, {
-	          setFilter: this.setFilter,
-	          initFilter: this.props.location.query
-	        })
+	        _react2.default.createElement(_IssueFilter2.default, { setFilter: this.setFilter, initFilter: this.props.location.query })
 	      ),
 	      _react2.default.createElement(
 	        _reactBootstrap.Table,
@@ -2518,7 +2514,7 @@
 	        _react2.default.createElement(
 	          'tbody',
 	          null,
-	          Object.keys(this.state.stats).map((owner, index) => _react2.default.createElement(StatRow, { key: index, owner: owner, count: this.state.stats[owner] }))
+	          Object.keys(this.state.stats).map((owner, index) => _react2.default.createElement(StatRow, { key: index, owner: owner, counts: this.state.stats[owner] }))
 	        )
 	      ),
 	      _react2.default.createElement(_Toast2.default, {

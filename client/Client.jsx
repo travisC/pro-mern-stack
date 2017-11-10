@@ -16,7 +16,7 @@ const WrappedApp = (props) => (
 
 
 const contentNode = document.getElementById('contents');
-/* eslint no-underscore-dangle: 0 */
+
 ReactDOM.render(<WrappedApp initialState={window.__INITIAL_STATE__} />, contentNode);
 
 if (module.hot) {
