@@ -27,7 +27,7 @@
 /******/ 	}
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "ee93d323af47087a5051"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "d2c88db8473abefa5529"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -546,7 +546,7 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 	__webpack_require__(1);
-	module.exports = __webpack_require__(29);
+	module.exports = __webpack_require__(32);
 
 
 /***/ }),
@@ -664,6 +664,7 @@
 	  if (req.query.effort_lte || req.query.effort_gte) filter.effort = {};
 	  if (req.query.effort_lte) filter.effort.$lte = parseInt(req.query.effort_lte, 10);
 	  if (req.query.effort_gte) filter.effort.$gte = parseInt(req.query.effort_gte, 10);
+	  if (req.query.search) filter.$text = { $search: req.query.search };
 	
 	  if (req.query._summary === undefined) {
 	    const offset = req.query._offset ? parseInt(req.query._offset, 10) : 0;
@@ -891,7 +892,7 @@
 	
 	var _Routes2 = _interopRequireDefault(_Routes);
 	
-	var _ContextWrapper = __webpack_require__(28);
+	var _ContextWrapper = __webpack_require__(31);
 	
 	var _ContextWrapper2 = _interopRequireDefault(_ContextWrapper);
 	
@@ -969,6 +970,7 @@
 	  <title>Pro MERN Stack</title>
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	  <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" >
+	  <link rel="stylesheet" href="/react-select/react-select.css" >
 	  <style>
 	    .panel-title a {display: block; width: 100%; cursor: pointer; }
 	  </style>
@@ -1003,15 +1005,15 @@
 	
 	var _App2 = _interopRequireDefault(_App);
 	
-	var _IssueList = __webpack_require__(21);
+	var _IssueList = __webpack_require__(24);
 	
 	var _IssueList2 = _interopRequireDefault(_IssueList);
 	
-	var _IssueEdit = __webpack_require__(24);
+	var _IssueEdit = __webpack_require__(27);
 	
 	var _IssueEdit2 = _interopRequireDefault(_IssueEdit);
 	
-	var _IssueReport = __webpack_require__(27);
+	var _IssueReport = __webpack_require__(30);
 	
 	var _IssueReport2 = _interopRequireDefault(_IssueReport);
 	
@@ -1049,80 +1051,16 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _reactBootstrap = __webpack_require__(17);
+	var _Header = __webpack_require__(17);
 	
-	var _reactRouterBootstrap = __webpack_require__(18);
-	
-	var _IssueAddNavItem = __webpack_require__(19);
-	
-	var _IssueAddNavItem2 = _interopRequireDefault(_IssueAddNavItem);
-	
-	var _withToast = __webpack_require__(31);
-	
-	var _withToast2 = _interopRequireDefault(_withToast);
+	var _Header2 = _interopRequireDefault(_Header);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	const Header = props => _react2.default.createElement(
-	  _reactBootstrap.Navbar,
-	  { fluid: true },
-	  _react2.default.createElement(
-	    _reactBootstrap.Navbar.Header,
-	    null,
-	    _react2.default.createElement(
-	      _reactBootstrap.Navbar.Brand,
-	      null,
-	      'Issue Tracker'
-	    )
-	  ),
-	  _react2.default.createElement(
-	    _reactBootstrap.Nav,
-	    null,
-	    _react2.default.createElement(
-	      _reactRouterBootstrap.LinkContainer,
-	      { to: '/issues' },
-	      _react2.default.createElement(
-	        _reactBootstrap.NavItem,
-	        null,
-	        'Issues'
-	      )
-	    ),
-	    _react2.default.createElement(
-	      _reactRouterBootstrap.LinkContainer,
-	      { to: '/reports' },
-	      _react2.default.createElement(
-	        _reactBootstrap.NavItem,
-	        null,
-	        'Reports'
-	      )
-	    )
-	  ),
-	  _react2.default.createElement(
-	    _reactBootstrap.Nav,
-	    { pullRight: true },
-	    _react2.default.createElement(_IssueAddNavItem2.default, { showError: props.showError }),
-	    _react2.default.createElement(
-	      _reactBootstrap.NavDropdown,
-	      { id: 'user-dropdown', title: _react2.default.createElement(_reactBootstrap.Glyphicon, { glyph: 'option-horizontal' }), noCaret: true },
-	      _react2.default.createElement(
-	        _reactBootstrap.MenuItem,
-	        null,
-	        'Logout'
-	      )
-	    )
-	  )
-	);
-	
-	Header.propTypes = {
-	  showError: _react2.default.PropTypes.func.isRequired
-	};
-	
-	const HeaderWithToast = (0, _withToast2.default)(Header);
 	
 	const App = props => _react2.default.createElement(
 	  'div',
 	  null,
-	  _react2.default.createElement(HeaderWithToast, null),
+	  _react2.default.createElement(_Header2.default, null),
 	  _react2.default.createElement(
 	    'div',
 	    { className: 'container-fluid' },
@@ -1154,18 +1092,162 @@
 
 /***/ }),
 /* 17 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = require("react-bootstrap");
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _react = __webpack_require__(11);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactBootstrap = __webpack_require__(18);
+	
+	var _reactRouterBootstrap = __webpack_require__(19);
+	
+	var _reactRouter = __webpack_require__(13);
+	
+	var _reactSelect = __webpack_require__(20);
+	
+	var _reactSelect2 = _interopRequireDefault(_reactSelect);
+	
+	var _IssueAddNavItem = __webpack_require__(21);
+	
+	var _IssueAddNavItem2 = _interopRequireDefault(_IssueAddNavItem);
+	
+	var _withToast = __webpack_require__(22);
+	
+	var _withToast2 = _interopRequireDefault(_withToast);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	const Header = props => {
+	  function searchIssues(input) {
+	    if (input.length < 2) return Promise.resolve({ options: [] });
+	
+	    return fetch(`/api/issues?search=${input}`).then(response => {
+	      if (!response.ok) return response.json().then(error => Promise.reject(error));
+	      return response.json().then(data => {
+	        const options = data.records.map(issue => ({
+	          value: issue._id,
+	          label: `${issue._id.substr(-4)}: ${issue.title}`
+	        }));
+	        return { options: options };
+	      }).catch(error => {
+	        this.props.showError(`Error fetching data from server: ${error}`);
+	      });
+	    });
+	  }
+	
+	  function filterOptions(options) {
+	    return options;
+	  }
+	
+	  function selectIssue(item) {
+	    if (item) props.router.push(`/issues/${item.value}`);
+	  }
+	
+	  return _react2.default.createElement(
+	    _reactBootstrap.Navbar,
+	    { fluid: true },
+	    _react2.default.createElement(
+	      _reactBootstrap.Col,
+	      { sm: 5 },
+	      _react2.default.createElement(
+	        _reactBootstrap.Navbar.Header,
+	        null,
+	        _react2.default.createElement(
+	          _reactBootstrap.Navbar.Brand,
+	          null,
+	          'Issue Tracker'
+	        )
+	      ),
+	      _react2.default.createElement(
+	        _reactBootstrap.Nav,
+	        null,
+	        _react2.default.createElement(
+	          _reactRouterBootstrap.LinkContainer,
+	          { to: '/issues' },
+	          _react2.default.createElement(
+	            _reactBootstrap.NavItem,
+	            null,
+	            'Issues'
+	          )
+	        ),
+	        _react2.default.createElement(
+	          _reactRouterBootstrap.LinkContainer,
+	          { to: '/reports' },
+	          _react2.default.createElement(
+	            _reactBootstrap.NavItem,
+	            null,
+	            'Reports'
+	          )
+	        )
+	      )
+	    ),
+	    _react2.default.createElement(
+	      _reactBootstrap.Col,
+	      { sm: 4 },
+	      _react2.default.createElement(
+	        'div',
+	        { style: { paddingTop: 8 } },
+	        _react2.default.createElement(_reactSelect2.default.Async, {
+	          instanceId: 'search', placeholder: 'Search ...', autoload: false, cache: false,
+	          loadOptions: searchIssues, filterOptions: filterOptions, onChange: selectIssue
+	        })
+	      )
+	    ),
+	    _react2.default.createElement(
+	      _reactBootstrap.Col,
+	      { sm: 3 },
+	      _react2.default.createElement(
+	        _reactBootstrap.Nav,
+	        { pullRight: true },
+	        _react2.default.createElement(_IssueAddNavItem2.default, { showError: props.showError }),
+	        _react2.default.createElement(
+	          _reactBootstrap.NavDropdown,
+	          { id: 'user-dropdown', title: _react2.default.createElement(_reactBootstrap.Glyphicon, { glyph: 'option-horizontal' }), noCaret: true },
+	          _react2.default.createElement(
+	            _reactBootstrap.MenuItem,
+	            null,
+	            'Logout'
+	          )
+	        )
+	      )
+	    )
+	  );
+	};
+	
+	Header.propTypes = {
+	  showError: _react2.default.PropTypes.func.isRequired,
+	  router: _react2.default.PropTypes.object
+	};
+	
+	exports.default = (0, _reactRouter.withRouter)((0, _withToast2.default)(Header));
 
 /***/ }),
 /* 18 */
 /***/ (function(module, exports) {
 
-	module.exports = require("react-router-bootstrap");
+	module.exports = require("react-bootstrap");
 
 /***/ }),
 /* 19 */
+/***/ (function(module, exports) {
+
+	module.exports = require("react-router-bootstrap");
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports) {
+
+	module.exports = require("react-select");
+
+/***/ }),
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1180,7 +1262,7 @@
 	
 	var _reactRouter = __webpack_require__(13);
 	
-	var _reactBootstrap = __webpack_require__(17);
+	var _reactBootstrap = __webpack_require__(18);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -1307,7 +1389,70 @@
 	exports.default = (0, _reactRouter.withRouter)(IssueAddNavItem);
 
 /***/ }),
-/* 20 */
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
+	exports.default = withToast;
+	
+	var _react = __webpack_require__(11);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _Toast = __webpack_require__(23);
+	
+	var _Toast2 = _interopRequireDefault(_Toast);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function withToast(OriginalComponent) {
+	  return class WithToast extends _react2.default.Component {
+	    constructor(props) {
+	      super(props);
+	      this.state = {
+	        toastVisible: false, toastMessage: '', toastType: 'success'
+	      };
+	      this.showSuccess = this.showSuccess.bind(this);
+	      this.showError = this.showError.bind(this);
+	      this.dismissToast = this.dismissToast.bind(this);
+	    }
+	
+	    showSuccess(message) {
+	      this.setState({ toastVisible: true, toastMessage: message, toastType: 'success' });
+	    }
+	
+	    showError(message) {
+	      this.setState({ toastVisible: true, toastMessage: message, toastType: 'danger' });
+	    }
+	
+	    dismissToast() {
+	      this.setState({ toastVisible: false });
+	    }
+	
+	    render() {
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(OriginalComponent, _extends({
+	          showError: this.showError, showSuccess: this.showSuccess }, this.props)),
+	        _react2.default.createElement(_Toast2.default, {
+	          showing: this.state.toastVisible, message: this.state.toastMessage,
+	          onDismiss: this.dismissToast, bsStyle: this.state.toastType
+	        })
+	      );
+	    }
+	  };
+	}
+
+/***/ }),
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1320,7 +1465,7 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _reactBootstrap = __webpack_require__(17);
+	var _reactBootstrap = __webpack_require__(18);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -1368,7 +1513,7 @@
 	};
 
 /***/ }),
-/* 21 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1381,17 +1526,17 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	__webpack_require__(22);
+	__webpack_require__(25);
 	
 	var _reactRouter = __webpack_require__(13);
 	
-	var _reactBootstrap = __webpack_require__(17);
+	var _reactBootstrap = __webpack_require__(18);
 	
-	var _IssueFilter = __webpack_require__(23);
+	var _IssueFilter = __webpack_require__(26);
 	
 	var _IssueFilter2 = _interopRequireDefault(_IssueFilter);
 	
-	var _withToast = __webpack_require__(31);
+	var _withToast = __webpack_require__(22);
 	
 	var _withToast2 = _interopRequireDefault(_withToast);
 	
@@ -1642,13 +1787,13 @@
 	exports.default = IssueListWithToast;
 
 /***/ }),
-/* 22 */
+/* 25 */
 /***/ (function(module, exports) {
 
 	module.exports = require("isomorphic-fetch");
 
 /***/ }),
-/* 23 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1661,7 +1806,7 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _reactBootstrap = __webpack_require__(17);
+	var _reactBootstrap = __webpack_require__(18);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -1856,7 +2001,7 @@
 	};
 
 /***/ }),
-/* 24 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1869,19 +2014,19 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _reactBootstrap = __webpack_require__(17);
+	var _reactBootstrap = __webpack_require__(18);
 	
-	var _reactRouterBootstrap = __webpack_require__(18);
+	var _reactRouterBootstrap = __webpack_require__(19);
 	
-	var _NumInput = __webpack_require__(25);
+	var _NumInput = __webpack_require__(28);
 	
 	var _NumInput2 = _interopRequireDefault(_NumInput);
 	
-	var _DateInput = __webpack_require__(26);
+	var _DateInput = __webpack_require__(29);
 	
 	var _DateInput2 = _interopRequireDefault(_DateInput);
 	
-	var _withToast = __webpack_require__(31);
+	var _withToast = __webpack_require__(22);
 	
 	var _withToast2 = _interopRequireDefault(_withToast);
 	
@@ -2222,7 +2367,7 @@
 	exports.default = IssueEditWithToast;
 
 /***/ }),
-/* 25 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2285,7 +2430,7 @@
 	};
 
 /***/ }),
-/* 26 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2372,7 +2517,7 @@
 	};
 
 /***/ }),
-/* 27 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2385,13 +2530,13 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _reactBootstrap = __webpack_require__(17);
+	var _reactBootstrap = __webpack_require__(18);
 	
-	var _IssueFilter = __webpack_require__(23);
+	var _IssueFilter = __webpack_require__(26);
 	
 	var _IssueFilter2 = _interopRequireDefault(_IssueFilter);
 	
-	var _withToast = __webpack_require__(31);
+	var _withToast = __webpack_require__(22);
 	
 	var _withToast2 = _interopRequireDefault(_withToast);
 	
@@ -2517,7 +2662,7 @@
 	exports.default = IssueReportWithToast;
 
 /***/ }),
-/* 28 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2553,7 +2698,7 @@
 	};
 
 /***/ }),
-/* 29 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(__resourceQuery) {/*
@@ -2584,7 +2729,7 @@
 						if(fromUpdate) console.log("[HMR] Update applied.");
 						return;
 					}
-					__webpack_require__(30)(updatedModules, updatedModules);
+					__webpack_require__(33)(updatedModules, updatedModules);
 					checkForUpdate(true);
 				});
 			}
@@ -2597,7 +2742,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, "?1000"))
 
 /***/ }),
-/* 30 */
+/* 33 */
 /***/ (function(module, exports) {
 
 	/*
@@ -2626,69 +2771,6 @@
 		}
 	};
 
-
-/***/ }),
-/* 31 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-	
-	exports.default = withToast;
-	
-	var _react = __webpack_require__(11);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var _Toast = __webpack_require__(20);
-	
-	var _Toast2 = _interopRequireDefault(_Toast);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function withToast(OriginalComponent) {
-	  return class WithToast extends _react2.default.Component {
-	    constructor(props) {
-	      super(props);
-	      this.state = {
-	        toastVisible: false, toastMessage: '', toastType: 'success'
-	      };
-	      this.showSuccess = this.showSuccess.bind(this);
-	      this.showError = this.showError.bind(this);
-	      this.dismissToast = this.dismissToast.bind(this);
-	    }
-	
-	    showSuccess(message) {
-	      this.setState({ toastVisible: true, toastMessage: message, toastType: 'success' });
-	    }
-	
-	    showError(message) {
-	      this.setState({ toastVisible: true, toastMessage: message, toastType: 'danger' });
-	    }
-	
-	    dismissToast() {
-	      this.setState({ toastVisible: false });
-	    }
-	
-	    render() {
-	      return _react2.default.createElement(
-	        'div',
-	        null,
-	        _react2.default.createElement(OriginalComponent, _extends({
-	          showError: this.showError, showSuccess: this.showSuccess }, this.props)),
-	        _react2.default.createElement(_Toast2.default, {
-	          showing: this.state.toastVisible, message: this.state.toastMessage,
-	          onDismiss: this.dismissToast, bsStyle: this.state.toastType
-	        })
-	      );
-	    }
-	  };
-	}
 
 /***/ })
 /******/ ])));
