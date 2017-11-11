@@ -27,7 +27,7 @@
 /******/ 	}
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "d2c88db8473abefa5529"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "250ba3553cf6b682cf88"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -546,7 +546,7 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 	__webpack_require__(1);
-	module.exports = __webpack_require__(32);
+	module.exports = __webpack_require__(33);
 
 
 /***/ }),
@@ -636,6 +636,10 @@
 	
 	var _express2 = _interopRequireDefault(_express);
 	
+	var _expressSession = __webpack_require__(35);
+	
+	var _expressSession2 = _interopRequireDefault(_expressSession);
+	
 	var _bodyParser = __webpack_require__(8);
 	
 	var _bodyParser2 = _interopRequireDefault(_bodyParser);
@@ -657,6 +661,22 @@
 	app.use(_bodyParser2.default.json());
 	
 	let db;
+	
+	app.use((0, _expressSession2.default)({ secret: 'h7e3f5s6', resave: false, saveUninitialized: true }));
+	
+	app.all('/api/*', (req, res, next) => {
+	  if (req.method === 'DELETE' || req.method === 'POST' || req.method === 'PUT') {
+	    if (!req.session || !req.session.user) {
+	      res.status(403).send({
+	        message: 'You are not authorized to perform the operation'
+	      });
+	    } else {
+	      next();
+	    }
+	  } else {
+	    next();
+	  }
+	});
 	
 	app.get('/api/issues', (req, res) => {
 	  const filter = {};
@@ -779,6 +799,38 @@
 	  });
 	});
 	
+	app.get('/api/users/me', (req, res) => {
+	  if (req.session && req.session.user) {
+	    res.json(req.session.user);
+	  } else {
+	    res.json({ signedIn: false, name: '' });
+	  }
+	});
+	
+	app.post('/signin', (req, res) => {
+	  if (!req.body.id_token) {
+	    res.status(400).send({ code: 400, message: 'Missing Token.' });
+	    return;
+	  }
+	  fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${req.body.id_token}`).then(response => {
+	    if (!response.ok) response.json().then(error => Promise.reject(error));
+	    response.json().then(data => {
+	      req.session.user = {
+	        signedIn: true, name: data.given_name
+	      };
+	      res.json(req.session.user);
+	    });
+	  }).catch(error => {
+	    console.log(error);
+	    res.status(500).json({ message: `Internal Server Error: ${error}` });
+	  });
+	});
+	
+	app.post('/signout', (req, res) => {
+	  if (req.session) req.session.destroy();
+	  res.json({ status: 'ok' });
+	});
+	
 	app.use('/', _renderedPageRouter2.default);
 	
 	function setDb(newDb) {
@@ -892,7 +944,7 @@
 	
 	var _Routes2 = _interopRequireDefault(_Routes);
 	
-	var _ContextWrapper = __webpack_require__(31);
+	var _ContextWrapper = __webpack_require__(32);
 	
 	var _ContextWrapper2 = _interopRequireDefault(_ContextWrapper);
 	
@@ -910,7 +962,7 @@
 	      const componentsWithData = renderProps.components.filter(c => c.dataFetcher);
 	      const dataFetchers = componentsWithData.map(c => c.dataFetcher({
 	        params: renderProps.params, location: renderProps.location,
-	        urlBase: 'http://localhost:3000'
+	        urlBase: 'http://localhost:3000', cookie: req.headers.cookie
 	      }));
 	      Promise.all(dataFetchers).then(dataList => {
 	        let initialState = {};
@@ -969,6 +1021,7 @@
 	  <meta charset="UTF-8" />
 	  <title>Pro MERN Stack</title>
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <script src="https://apis.google.com/js/api:client.js"></script>
 	  <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" >
 	  <link rel="stylesheet" href="/react-select/react-select.css" >
 	  <style>
@@ -980,6 +1033,7 @@
 	  <script>window.__INITIAL_STATE__ = ${JSON.stringify(initialState)};</script>
 	  <script src="/vendor.bundle.js"></script>
 	  <script src="/app.bundle.js"></script>
+	  <script src="/config.js"></script>
 	</body>
 	</html>
 	`;
@@ -1005,15 +1059,15 @@
 	
 	var _App2 = _interopRequireDefault(_App);
 	
-	var _IssueList = __webpack_require__(24);
+	var _IssueList = __webpack_require__(25);
 	
 	var _IssueList2 = _interopRequireDefault(_IssueList);
 	
-	var _IssueEdit = __webpack_require__(27);
+	var _IssueEdit = __webpack_require__(28);
 	
 	var _IssueEdit2 = _interopRequireDefault(_IssueEdit);
 	
-	var _IssueReport = __webpack_require__(30);
+	var _IssueReport = __webpack_require__(31);
 	
 	var _IssueReport2 = _interopRequireDefault(_IssueReport);
 	
@@ -1057,38 +1111,82 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	const App = props => _react2.default.createElement(
-	  'div',
-	  null,
-	  _react2.default.createElement(_Header2.default, null),
-	  _react2.default.createElement(
-	    'div',
-	    { className: 'container-fluid' },
-	    props.children,
-	    _react2.default.createElement('hr', null),
-	    _react2.default.createElement(
-	      'h5',
-	      null,
-	      _react2.default.createElement(
-	        'small',
-	        null,
-	        'Full source code available at this ',
-	        _react2.default.createElement(
-	          'a',
-	          { href: 'https://github.com/vasansr/pro-mern-stack' },
-	          'GitHub repository'
-	        ),
-	        '.'
-	      )
-	    )
-	  )
-	);
+	class App extends _react2.default.Component {
+	  static dataFetcher(_ref) {
+	    let urlBase = _ref.urlBase,
+	        cookie = _ref.cookie;
 	
+	    const headers = cookie ? { headers: { Cookie: cookie } } : null;
+	    return fetch(`${urlBase || ''}/api/users/me`, headers).then(response => {
+	      if (!response.ok) return response.json().then(error => Promise.reject(error));
+	      return response.json().then(data => ({ App: data }));
+	    });
+	  }
+	
+	  constructor(props, context) {
+	    super(props, context);
+	    const user = context.initialState.App ? context.initialState.App : {};
+	    this.state = {
+	      user: user
+	    };
+	    this.onSignin = this.onSignin.bind(this);
+	    this.onSignout = this.onSignout.bind(this);
+	  }
+	
+	  componentDidMount() {
+	    App.dataFetcher({}).then(data => {
+	      const user = data.App;
+	      this.setState({ user: user });
+	    });
+	  }
+	
+	  onSignin(name) {
+	    this.setState({ user: { signedIn: true, name: name } });
+	  }
+	
+	  onSignout() {
+	    this.setState({ user: { signedIn: false, name: '' } });
+	  }
+	
+	  render() {
+	    const childrenWithUser = _react2.default.Children.map(this.props.children, child => _react2.default.cloneElement(child, { user: this.state.user }));
+	    return _react2.default.createElement(
+	      'div',
+	      null,
+	      _react2.default.createElement(_Header2.default, { user: this.state.user, onSignin: this.onSignin, onSignout: this.onSignout }),
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'container-fluid' },
+	        childrenWithUser,
+	        _react2.default.createElement('hr', null),
+	        _react2.default.createElement(
+	          'h5',
+	          null,
+	          _react2.default.createElement(
+	            'small',
+	            null,
+	            'Full source code available at this ',
+	            _react2.default.createElement(
+	              'a',
+	              { href: 'https://github.com/vasansr/pro-mern-stack' },
+	              'GitHub repository'
+	            ),
+	            '.'
+	          )
+	        )
+	      )
+	    );
+	  }
+	}
+	
+	exports.default = App;
 	App.propTypes = {
 	  children: _react2.default.PropTypes.object.isRequired
 	};
 	
-	exports.default = App;
+	App.contextTypes = {
+	  initialState: _react2.default.PropTypes.object
+	};
 
 /***/ }),
 /* 17 */
@@ -1118,7 +1216,11 @@
 	
 	var _IssueAddNavItem2 = _interopRequireDefault(_IssueAddNavItem);
 	
-	var _withToast = __webpack_require__(22);
+	var _SigninNavItem = __webpack_require__(22);
+	
+	var _SigninNavItem2 = _interopRequireDefault(_SigninNavItem);
+	
+	var _withToast = __webpack_require__(23);
 	
 	var _withToast2 = _interopRequireDefault(_withToast);
 	
@@ -1206,16 +1308,11 @@
 	      _react2.default.createElement(
 	        _reactBootstrap.Nav,
 	        { pullRight: true },
-	        _react2.default.createElement(_IssueAddNavItem2.default, { showError: props.showError }),
-	        _react2.default.createElement(
-	          _reactBootstrap.NavDropdown,
-	          { id: 'user-dropdown', title: _react2.default.createElement(_reactBootstrap.Glyphicon, { glyph: 'option-horizontal' }), noCaret: true },
-	          _react2.default.createElement(
-	            _reactBootstrap.MenuItem,
-	            null,
-	            'Logout'
-	          )
-	        )
+	        props.user.signedIn ? _react2.default.createElement(_IssueAddNavItem2.default, { showError: props.showError }) : null,
+	        _react2.default.createElement(_SigninNavItem2.default, {
+	          user: props.user, onSignin: props.onSignin, onSignout: props.onSignout,
+	          showError: props.showError, showSuccess: props.showSuccess
+	        })
 	      )
 	    )
 	  );
@@ -1223,6 +1320,10 @@
 	
 	Header.propTypes = {
 	  showError: _react2.default.PropTypes.func.isRequired,
+	  showSuccess: _react2.default.PropTypes.func.isRequired,
+	  onSignin: _react2.default.PropTypes.func.isRequired,
+	  onSignout: _react2.default.PropTypes.func.isRequired,
+	  user: _react2.default.PropTypes.object,
 	  router: _react2.default.PropTypes.object
 	};
 	
@@ -1398,6 +1499,163 @@
 	  value: true
 	});
 	
+	var _react = __webpack_require__(11);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactBootstrap = __webpack_require__(18);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	class SigninNavItem extends _react2.default.Component {
+	  constructor(props) {
+	    super(props);
+	    this.state = {
+	      showing: false, disabled: true
+	    };
+	    this.showModal = this.showModal.bind(this);
+	    this.hideModal = this.hideModal.bind(this);
+	    this.signout = this.signout.bind(this);
+	    this.signin = this.signin.bind(this);
+	  }
+	
+	  componentDidMount() {
+	    window.gapi.load('auth2', () => {
+	      if (!window.gapi.auth2.getAuthInstance()) {
+	        if (!window.config || !window.config.googleClientId) {
+	          this.props.showError('Missing Google Client ID or config file /static.config.js');
+	        } else {
+	          window.gapi.auth2.init({ client_id: window.config.googleClientId }).then(() => {
+	            this.setState({ disabled: false });
+	          });
+	        }
+	      }
+	    });
+	  }
+	
+	  signin() {
+	    this.hideModal();
+	    const auth2 = window.gapi.auth2.getAuthInstance();
+	    auth2.signIn().then(googleUser => {
+	      fetch('/signin', {
+	        method: 'POST',
+	        headers: { 'Content-Type': 'application/json' },
+	        body: JSON.stringify({ id_token: googleUser.getAuthResponse().id_token })
+	      }).then(response => {
+	        if (response.ok) {
+	          response.json().then(user => {
+	            this.props.onSignin(user.name);
+	          });
+	        } else {
+	          response.json().then(error => {
+	            this.props.showError(`App login failed: ${error}`);
+	          });
+	        }
+	      }).catch(err => {
+	        this.props.showError(`Error posting login to app: ${err}`);
+	      });
+	    }, error => {
+	      this.props.showError(`Error authenticating with Google: ${error}`);
+	    });
+	  }
+	
+	  signout() {
+	    const auth2 = window.gapi.auth2.getAuthInstance();
+	    fetch('/signout', {
+	      method: 'POST',
+	      headers: { 'Content-Type': 'application/json' }
+	    }).then(response => {
+	      if (response.ok) {
+	        auth2.signOut().then(() => {
+	          this.props.showSuccess('Successfully signed out.');
+	          this.props.onSignout();
+	        });
+	      }
+	    });
+	  }
+	
+	  showModal() {
+	    if (this.state.disabled) {
+	      this.props.showError('Missing Google Client ID or config file /static.config.js');
+	    } else {
+	      this.setState({ showing: true });
+	    }
+	  }
+	
+	  hideModal() {
+	    this.setState({ showing: false });
+	  }
+	
+	  render() {
+	    if (this.props.user.signedIn) {
+	      return _react2.default.createElement(
+	        _reactBootstrap.NavDropdown,
+	        { title: this.props.user.name, id: 'user-dropdown' },
+	        _react2.default.createElement(
+	          _reactBootstrap.MenuItem,
+	          { onClick: this.signout },
+	          'Sign out'
+	        )
+	      );
+	    }
+	    return _react2.default.createElement(
+	      _reactBootstrap.NavItem,
+	      { onClick: this.showModal },
+	      'Sign in',
+	      _react2.default.createElement(
+	        _reactBootstrap.Modal,
+	        { keyboard: true, show: this.state.showing, onHide: this.hideModal, bsSize: 'sm' },
+	        _react2.default.createElement(
+	          _reactBootstrap.Modal.Header,
+	          { closeButton: true },
+	          _react2.default.createElement(
+	            _reactBootstrap.Modal.Title,
+	            null,
+	            'Sign in'
+	          )
+	        ),
+	        _react2.default.createElement(
+	          _reactBootstrap.Modal.Body,
+	          null,
+	          _react2.default.createElement(
+	            _reactBootstrap.Button,
+	            { block: true, disabled: this.state.disabled, onClick: this.signin },
+	            _react2.default.createElement('img', { src: '/btn_google_signin_dark_normal_web.png', alt: 'Sign in' })
+	          )
+	        ),
+	        _react2.default.createElement(
+	          _reactBootstrap.Modal.Footer,
+	          null,
+	          _react2.default.createElement(
+	            _reactBootstrap.Button,
+	            { bsStyle: 'link', onClick: this.hideModal },
+	            'Cancel'
+	          )
+	        )
+	      )
+	    );
+	  }
+	}
+	
+	exports.default = SigninNavItem;
+	SigninNavItem.propTypes = {
+	  user: _react2.default.PropTypes.object,
+	  onSignin: _react2.default.PropTypes.func.isRequired,
+	  onSignout: _react2.default.PropTypes.func.isRequired,
+	  showError: _react2.default.PropTypes.func.isRequired,
+	  showSuccess: _react2.default.PropTypes.func.isRequired
+	};
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 	
 	exports.default = withToast;
@@ -1406,7 +1664,7 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _Toast = __webpack_require__(23);
+	var _Toast = __webpack_require__(24);
 	
 	var _Toast2 = _interopRequireDefault(_Toast);
 	
@@ -1452,7 +1710,7 @@
 	}
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1513,7 +1771,7 @@
 	};
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1526,17 +1784,17 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	__webpack_require__(25);
+	__webpack_require__(26);
 	
 	var _reactRouter = __webpack_require__(13);
 	
 	var _reactBootstrap = __webpack_require__(18);
 	
-	var _IssueFilter = __webpack_require__(26);
+	var _IssueFilter = __webpack_require__(27);
 	
 	var _IssueFilter2 = _interopRequireDefault(_IssueFilter);
 	
-	var _withToast = __webpack_require__(22);
+	var _withToast = __webpack_require__(23);
 	
 	var _withToast2 = _interopRequireDefault(_withToast);
 	
@@ -1589,7 +1847,7 @@
 	      null,
 	      props.issue.title
 	    ),
-	    _react2.default.createElement(
+	    props.deleteIssue ? _react2.default.createElement(
 	      'td',
 	      null,
 	      _react2.default.createElement(
@@ -1597,13 +1855,13 @@
 	        { bsSize: 'xsmall', onClick: onDeleteClick },
 	        _react2.default.createElement(_reactBootstrap.Glyphicon, { glyph: 'trash' })
 	      )
-	    )
+	    ) : null
 	  );
 	};
 	
 	IssueRow.propTypes = {
 	  issue: _react2.default.PropTypes.object.isRequired,
-	  deleteIssue: _react2.default.PropTypes.func.isRequired
+	  deleteIssue: _react2.default.PropTypes.func
 	};
 	
 	function IssueTable(props) {
@@ -1652,7 +1910,7 @@
 	          null,
 	          'Title'
 	        ),
-	        _react2.default.createElement('th', null)
+	        props.deleteIssue ? _react2.default.createElement('th', null) : null
 	      )
 	    ),
 	    _react2.default.createElement(
@@ -1665,7 +1923,7 @@
 	
 	IssueTable.propTypes = {
 	  issues: _react2.default.PropTypes.array.isRequired,
-	  deleteIssue: _react2.default.PropTypes.func.isRequired
+	  deleteIssue: _react2.default.PropTypes.func
 	};
 	
 	const PAGE_SIZE = 10;
@@ -1766,7 +2024,10 @@
 	        activePage: parseInt(this.props.location.query._page || '1', 10),
 	        onSelect: this.selectPage, maxButtons: 7, next: true, prev: true, boundaryLinks: true
 	      }),
-	      _react2.default.createElement(IssueTable, { issues: this.state.issues, deleteIssue: this.deleteIssue })
+	      _react2.default.createElement(IssueTable, {
+	        issues: this.state.issues,
+	        deleteIssue: this.props.user.signedIn ? this.deleteIssue : null
+	      })
 	    );
 	  }
 	}
@@ -1774,7 +2035,8 @@
 	IssueList.propTypes = {
 	  location: _react2.default.PropTypes.object.isRequired,
 	  router: _react2.default.PropTypes.object,
-	  showError: _react2.default.PropTypes.func.isRequired
+	  showError: _react2.default.PropTypes.func.isRequired,
+	  user: _react2.default.PropTypes.object.isRequired
 	};
 	
 	IssueList.contextTypes = {
@@ -1787,13 +2049,13 @@
 	exports.default = IssueListWithToast;
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports) {
 
 	module.exports = require("isomorphic-fetch");
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2001,7 +2263,7 @@
 	};
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2018,15 +2280,15 @@
 	
 	var _reactRouterBootstrap = __webpack_require__(19);
 	
-	var _NumInput = __webpack_require__(28);
+	var _NumInput = __webpack_require__(29);
 	
 	var _NumInput2 = _interopRequireDefault(_NumInput);
 	
-	var _DateInput = __webpack_require__(29);
+	var _DateInput = __webpack_require__(30);
 	
 	var _DateInput2 = _interopRequireDefault(_DateInput);
 	
-	var _withToast = __webpack_require__(22);
+	var _withToast = __webpack_require__(23);
 	
 	var _withToast2 = _interopRequireDefault(_withToast);
 	
@@ -2322,7 +2584,7 @@
 	              null,
 	              _react2.default.createElement(
 	                _reactBootstrap.Button,
-	                { bsStyle: 'primary', type: 'submit' },
+	                { bsStyle: 'primary', type: 'submit', disabled: !this.props.user.signedIn },
 	                'Submit'
 	              ),
 	              _react2.default.createElement(
@@ -2354,7 +2616,8 @@
 	IssueEdit.propTypes = {
 	  params: _react2.default.PropTypes.object.isRequired,
 	  showSuccess: _react2.default.PropTypes.func.isRequired,
-	  showError: _react2.default.PropTypes.func.isRequired
+	  showError: _react2.default.PropTypes.func.isRequired,
+	  user: _react2.default.PropTypes.object.isRequired
 	};
 	
 	IssueEdit.contextTypes = {
@@ -2367,7 +2630,7 @@
 	exports.default = IssueEditWithToast;
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2430,7 +2693,7 @@
 	};
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2517,7 +2780,7 @@
 	};
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2532,11 +2795,11 @@
 	
 	var _reactBootstrap = __webpack_require__(18);
 	
-	var _IssueFilter = __webpack_require__(26);
+	var _IssueFilter = __webpack_require__(27);
 	
 	var _IssueFilter2 = _interopRequireDefault(_IssueFilter);
 	
-	var _withToast = __webpack_require__(22);
+	var _withToast = __webpack_require__(23);
 	
 	var _withToast2 = _interopRequireDefault(_withToast);
 	
@@ -2662,7 +2925,7 @@
 	exports.default = IssueReportWithToast;
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2698,7 +2961,7 @@
 	};
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(__resourceQuery) {/*
@@ -2729,7 +2992,7 @@
 						if(fromUpdate) console.log("[HMR] Update applied.");
 						return;
 					}
-					__webpack_require__(33)(updatedModules, updatedModules);
+					__webpack_require__(34)(updatedModules, updatedModules);
 					checkForUpdate(true);
 				});
 			}
@@ -2742,7 +3005,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, "?1000"))
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports) {
 
 	/*
@@ -2771,6 +3034,12 @@
 		}
 	};
 
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports) {
+
+	module.exports = require("express-session");
 
 /***/ })
 /******/ ])));
